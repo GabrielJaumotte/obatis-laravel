@@ -229,3 +229,10 @@ def remove_project_member(project_id: str, user_id: str):
         .execute()
     return {"message": "Membre retiré"}
 
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/testroute")
+async def testroute():
+    return {"status": "ok", "message": "API Obatis opérationnelle !"}
