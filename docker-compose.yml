@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    volumes:
+      - .:/var/www
+    environment:
+      - APP_ENV=local
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=obatis
+      - DB_USERNAME=obatis_user
+      - DB_PASSWORD=secret
+      - LOG_CHANNEL=errorlog
+    depends_on:
+      - db
+    networks:
+      - obatis
+
+  nginx:
+    image: nginx:stable
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www:ro
+      - ./nginx:/etc/nginx/conf.d:ro
+    depends_on:
+      - app
+    networks:
+      - obatis
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: obatis
+      POSTGRES_USER: obatis_user
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - obatis
+
+networks:
+  obatis:
+
+volumes:
+  pgdata:
