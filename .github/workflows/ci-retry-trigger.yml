@@ -1,0 +1,22 @@
+name: Detect CI Failure and Notify Agent IA
+
+on:
+  workflow_run:
+    workflows: ["Run Laravel Tests"]
+    types:
+      - completed
+
+jobs:
+  notify-agent:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Agent IA via Webhook (retry trigger)
+        run: |
+          curl -X POST https://api.obatis.be/ia/ci-retry \
+            -H "Content-Type: application/json" \
+            -d '{
+              "branch": "${{ github.event.workflow_run.head_branch }}",
+              "commit": "${{ github.event.workflow_run.head_sha }}",
+              "conclusion": "failure"
+            }'
