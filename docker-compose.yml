@@ -1,49 +1,46 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  app:
-    build: .
-    volumes:
-      - .:/var/www
-    environment:
-      - APP_ENV=local
-      - DB_CONNECTION=pgsql
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_DATABASE=obatis
-      - DB_USERNAME=obatis_user
-      - DB_PASSWORD=secret
-      - LOG_CHANNEL=errorlog
-    depends_on:
-      - db
-    networks:
-      - obatis
-
   nginx:
     image: nginx:stable
     ports:
-      - "8000:80"
+      - "8010:80"          # Port public: 8010 → container: 80
     volumes:
-      - .:/var/www:ro
-      - ./nginx:/etc/nginx/conf.d:ro
+      - ./nginx:/etc/nginx/conf.d:ro    # Ta conf nginx custom (dossier nginx/)
+      - ./public:/var/www/public:ro     # Les assets Laravel (read-only)
     depends_on:
       - app
+    networks:
+      - obatis
+
+  app:
+    build: .
+    command: php artisan octane:start --server=roadrunner --host=0.0.0.0 --port=8001
+    # Les variables d'environnement sont injectées depuis .env (option recommandée)
+    env_file:
+      - .env
+    ports:
+      - "8001:8001"        # Expose (optionnel) pour debug direct
+    volumes:
+      - .:/var/www         # Tout le code source Laravel
+    depends_on:
+      - db
     networks:
       - obatis
 
   db:
     image: postgres:16
     environment:
-      POSTGRES_DB: obatis
-      POSTGRES_USER: obatis_user
-      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: obatis_staging
+      POSTGRES_USER: obatis_app
+      POSTGRES_PASSWORD: EE651Vjdnc921!(545dhb65ws?
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - obatis
 
-networks:
-  obatis:
-
 volumes:
   pgdata:
+
+networks:
+  obatis:

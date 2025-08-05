@@ -1,7 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TestGuzzleController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return 'OK Laravel!';
 });
+
+Route::get('/test-guzzle', [TestGuzzleController::class, 'testGuzzle']);
