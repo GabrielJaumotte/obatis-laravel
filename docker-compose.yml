@@ -4,10 +4,10 @@ services:
   nginx:
     image: nginx:stable
     ports:
-      - "8010:80"          # Port public: 8010 → container: 80
+      - "8010:80"
     volumes:
-      - ./nginx:/etc/nginx/conf.d:ro    # Ta conf nginx custom (dossier nginx/)
-      - ./public:/var/www/public:ro     # Les assets Laravel (read-only)
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./public:/var/www/public:ro
     depends_on:
       - app
     networks:
@@ -15,14 +15,14 @@ services:
 
   app:
     build: .
+    container_name: app         # ✅ Pour que nginx reconnaisse "app" comme hostname Docker
     command: php artisan octane:start --server=roadrunner --host=0.0.0.0 --port=8001
-    # Les variables d'environnement sont injectées depuis .env (option recommandée)
     env_file:
       - .env
     ports:
-      - "8001:8001"        # Expose (optionnel) pour debug direct
+      - "8001:8001"
     volumes:
-      - .:/var/www         # Tout le code source Laravel
+      - .:/var/www
     depends_on:
       - db
     networks:
