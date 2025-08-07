@@ -16,6 +16,7 @@ services:
 
   # Application Laravel Octane + RoadRunner
   app:
+    image: obatis-app:latest
     build: .
     env_file:
       - .env
