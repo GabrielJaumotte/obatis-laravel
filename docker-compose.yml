@@ -1,4 +1,5 @@
 version: '3.8'
+name: obatis
 
 services:
   # Reverse proxy Nginx
@@ -58,8 +59,7 @@ services:
   # Redis pour file d'attente et cache
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    # Port mapping supprimé pour éviter les conflits avec un Redis déjà présent sur l'hôte
     command: ["redis-server", "--appendonly", "yes"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
