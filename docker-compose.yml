@@ -1,4 +1,4 @@
-version: '3.8'
+# version omitted for Compose v2 compatibility
 
 services:
   # Reverse proxy Nginx
