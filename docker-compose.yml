@@ -22,8 +22,11 @@ services:
       - .env
     ports:
       - "8001:8001"        # Exposition optionnelle pour debug
-    volumes:
-      - .:/var/www         # Partage du code source pour un développement plus rapide
+    # Dans un environnement de production, ne pas monter le code source de l'hôte
+    # afin de ne pas masquer les fichiers compilés (vendor) dans l'image. 
+    # Pour un développement local, vous pouvez décommenter la ligne ci‑dessous.
+    # volumes:
+    #   - .:/var/www
     # Attendre que les services DB et Redis soient considérés comme "healthy" avant de démarrer l'app
     depends_on:
       db:
