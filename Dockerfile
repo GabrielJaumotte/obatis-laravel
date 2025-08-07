@@ -44,8 +44,16 @@ WORKDIR /var/www
 # Copier l’application compilée depuis l’étape de build
 COPY --from=build /app /var/www
 
+## Entrypoint
+# Copier le script d'entrypoint qui prépare les droits des dossiers puis exécute la commande
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Exposer le port utilisé par Octane
 EXPOSE 8001
+
+# Entrypoint: prépare l'environnement et exécute la commande passée
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Commande par défaut : démarrage d’Octane avec RoadRunner
 CMD ["php", "artisan", "octane:start", "--server=roadrunner", "--host=0.0.0.0", "--port=8001", "--max-requests=500"]
