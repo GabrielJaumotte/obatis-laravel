@@ -9,8 +9,10 @@ services:
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro   # Configuration Nginx
       - ./public:/var/www/public:ro    # Assets Laravel (read‑only)
+    # Attendre que l'application soit healthy avant de lancer Nginx
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     networks:
       - obatis
 
