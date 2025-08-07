@@ -23,6 +23,7 @@
 /storage/framework/sessions
 /storage/framework/views
 /vendor
+vendor/bin/rr
 Homestead.json
 Homestead.yaml
 Thumbs.db

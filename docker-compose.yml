@@ -1,42 +1,70 @@
 version: '3.8'
 
 services:
+  # Reverse proxy Nginx
   nginx:
     image: nginx:stable
     ports:
-      - "8010:80"          # Port public: 8010 → container: 80
+      - "8010:80"  # Port public vers le conteneur Nginx
     volumes:
-      - ./nginx:/etc/nginx/conf.d:ro    # Ta conf nginx custom (dossier nginx/)
-      - ./public:/var/www/public:ro     # Les assets Laravel (read-only)
+      - ./nginx:/etc/nginx/conf.d:ro   # Configuration Nginx
+      - ./public:/var/www/public:ro    # Assets Laravel (read‑only)
     depends_on:
       - app
     networks:
       - obatis
 
+  # Application Laravel Octane + RoadRunner
   app:
-    container_name: app
     build: .
-    command: php artisan octane:start --server=roadrunner --host=0.0.0.0 --port=8001
-    # Les variables d'environnement sont injectées depuis .env (option recommandée)
     env_file:
       - .env
     ports:
-      - "8001:8001"        # Expose (optionnel) pour debug direct
+      - "8001:8001"        # Exposition optionnelle pour debug
     volumes:
-      - .:/var/www         # Tout le code source Laravel
+      - .:/var/www         # Partage du code source pour un développement plus rapide
     depends_on:
       - db
+      - redis
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     networks:
       - obatis
 
+  # Base de données PostgreSQL
   db:
     image: postgres:16
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: obatis_staging
-      POSTGRES_USER: obatis_app
-      POSTGRES_PASSWORD: EE651Vjdnc921!(545dhb65ws?
+      # Référence des variables de .env pour éviter les valeurs en dur
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - obatis
+
+  # Redis pour file d'attente et cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     networks:
       - obatis
 

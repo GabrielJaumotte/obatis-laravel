@@ -1,35 +1,51 @@
-FROM php:8.3-fpm
+##
+## Dockerfile multistage pour Laravel Octane avec RoadRunner
+##
+# Étape de build : installation des dépendances et compilation
+FROM php:8.3-cli AS build
 
-# 1. Installation des dépendances système nécessaires
-RUN apt-get update \
-  && apt-get install -y git unzip curl libzip-dev libpq-dev libonig-dev libxml2-dev
+# Dépendances système nécessaires (versions minimales)
+RUN apt-get update \ 
+    && apt-get install -y --no-install-recommends git unzip curl libzip-dev libpq-dev libonig-dev libxml2-dev \ 
+    && docker-php-ext-install pdo_mysql zip pdo_pgsql pgsql sockets pcntl
 
-RUN docker-php-ext-install pdo_mysql zip pdo_pgsql pgsql sockets pcntl
-
-# 2. Installation de Composer
+# Installation de Composer à partir de l’image officielle
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 3. Définition du répertoire de travail
-WORKDIR /var/www
+WORKDIR /app
 
-# 4. Copie complète du projet ENTIÈREMENT avant d’installer composer
+# Copier les manifestes afin de mettre en cache l’installation des vendors
+COPY composer.json composer.lock ./
+
+# Installation des dépendances PHP (sans dev) et des autoload optimisés
+RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts
+
+# Copier le code restant
 COPY . .
 
-# 5. Installation des dépendances Laravel (à faire après avoir copié tout le projet)
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+# Télécharger le binaire RoadRunner (ne pas le committer)
+RUN php vendor/bin/rr get
 
-# 6. Permissions pour les dossiers nécessaires à Laravel
-RUN mkdir -p storage bootstrap/cache \
-  && chown -R www-data:www-data storage bootstrap/cache
+# Génération de l’autoload optimisé
+RUN composer dump-autoload --optimize
 
-# 7. Artisan : clé + cache + autoload
-RUN php artisan key:generate --force \
-  && php artisan config:cache \
-  && composer dump-autoload --optimize
 
-# 8. Script de démarrage (entrypoint)
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# Étape finale : image d’exécution minimaliste
+FROM php:8.3-cli
 
-ENTRYPOINT ["entrypoint.sh"]
-CMD ["php-fpm"]
+# Installer uniquement les extensions nécessaires
+RUN apt-get update \ 
+    && apt-get install -y --no-install-recommends libzip-dev libpq-dev libonig-dev \ 
+    && docker-php-ext-install pdo_pgsql zip sockets pcntl \ 
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /var/www
+
+# Copier l’application compilée depuis l’étape de build
+COPY --from=build /app /var/www
+
+# Exposer le port utilisé par Octane
+EXPOSE 8001
+
+# Commande par défaut : démarrage d’Octane avec RoadRunner
+CMD ["php", "artisan", "octane:start", "--server=roadrunner", "--host=0.0.0.0", "--port=8001", "--max-requests=500"]
