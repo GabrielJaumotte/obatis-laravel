@@ -1,0 +1,33 @@
+# Ignore Git and GitHub artifacts
+.git/
+.github/
+
+# Ignore Node modules and vendor directories
+node_modules/
+vendor/
+
+# Ignore Docker build artifacts (RR binary and compiled views)
+rr
+
+# Exclude compiled Laravel views and caches
+obatis-api/storage/framework/views
+storage/framework/views
+storage/framework/sessions
+storage/framework/cache
+
+# Exclude environment files and secrets
+.env
+.env.*
+.env.example
+
+# Exclude tests and local development artifacts
+tests/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Exclude deployment scripts or OS-specific files
+deploy-obatis.ps1
+deploy-auto-staging.ps1
+*.ps1
