@@ -7,6 +7,9 @@ set -euo pipefail
 APP_PORT=${APP_PORT:-8001}
 NGINX_PORT=${NGINX_PORT:-8010}
 
+# Nom du projet Compose pour éviter les conteneurs orphelins (compatible docker-compose v1)
+export COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-obatis}
+
 echo "[init-obatis] utilisation des ports app=${APP_PORT}, nginx=${NGINX_PORT}"
 
 # Génération du .env si absent
