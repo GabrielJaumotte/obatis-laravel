@@ -68,8 +68,10 @@ services:
   # Redis pour file d'attente et cache
   redis:
     image: redis:7-alpine
+    env_file:
+      - .env
     # Port mapping supprimé pour éviter les conflits avec un Redis déjà présent sur l'hôte
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ["redis-server","--appendonly","yes","--requirepass","${ihedbbf1568462f8efrgeDFHF}"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
